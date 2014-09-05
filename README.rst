@@ -92,6 +92,18 @@ the program.
 Option ``--encoding=ENCODING_NAME`` specifies the encoding of input file
 (``--encoding=utf-8`` by default).
 
+Option ``--proj`` or ``--proj4`` forces output of resulting projstring only,
+suppressing table of residual errors.
+
+Option ``--wkt`` forces output of projection parameters in OGC WKT format
+(GDAL Python bindings required).
+
+Option ``--esri`` forces output of projection parameters in Esri WKT format
+(experimental, GDAL Python bindings required)
+
+Option ``--pretty`` forces pretty WKT formatting when used with ``--wkt``
+or ``--esri``.
+
 Output
 ------
 
