@@ -179,7 +179,7 @@ def parse_arguments(argv):
 def parse_coord(s):
     """Parses a value of coordinate"""
     # TODO: Implement DMS format
-    return float(s.replace(',', '.'))
+    return float(to_str(s).replace(',', '.'))
 
 
 def read_points(filename, encoding='utf-8'):

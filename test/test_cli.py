@@ -13,7 +13,7 @@ class TestFourPoints(unittest.TestCase):
 
     def setUp(self):
         self.test_dir = os.path.abspath(os.path.split(__file__)[0])
-        self.input_file = os.path.join(self.test_dir, 'testpoints.txt')
+        self.input_file = os.path.join(self.test_dir, 'four_points.txt')
         self.script_dir = os.path.split(self.test_dir)[0]
         self.script_path = os.path.join(self.script_dir, 'guessproj.py')
 
