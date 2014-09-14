@@ -18,7 +18,7 @@ from pyproj import Proj, transform
 from scipy.optimize import leastsq
 
 try:
-    from osgeo import osr # GDAL is needed for WKT output
+    from osgeo import osr # GDAL is optional (used for WKT output)
 except:
     osr = False
 
@@ -188,7 +188,7 @@ def read_points(filename, encoding='utf-8'):
     with codecs.open(filename, 'r', encoding) as fp:
         for line in fp:
             tokens = line.strip().split()
-            if not tokens[0] or tokens[0].startswith('#'):
+            if not tokens or not tokens[0] or tokens[0].startswith('#'):
                 continue
             number_count = len(tokens)
             for i, t in enumerate(tokens):
