@@ -239,7 +239,7 @@ def print_residuals(points, residuals):
         if len(r) == 2:
             print('{0}\t{1}\t\t{2}'.format(r[0], r[1], pt[2]))
         else:
-            print('{0}\t{1}\t{2}\t{3}'.format(r[0], r[1], r[3], pt[2]))
+            print('{0}\t{1}\t{2}\t{3}'.format(r[0], r[1], r[2], pt[2]))
 
 
 def print_wkt(projstring, esri=False, pretty=False):
