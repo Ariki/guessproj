@@ -177,9 +177,39 @@ def parse_arguments(argv):
 
 
 def parse_coord(s):
-    """Parses a value of coordinate"""
-    # TODO: Implement DMS format
-    return float(to_str(s).replace(',', '.'))
+    """Parses a value of coordinate in decimal or DMS format"""
+    if s is None:
+        raise TypeError('Coordinate value is None')
+    ss = to_str(s).replace(',', '.')
+    try:
+        f = float(ss)
+    except:
+        dms_re = re.compile(r'^([+-])?'
+                            r'(?:(\d{0,3}(?:\.\d*)?)?d)?'
+                            r"(?:(\d{0,2}(?:\.\d*)?)?')?"
+                            r'(?:(\d{0,2}(?:\.\d*)?)?")?$')
+        m = dms_re.match(ss)
+        if not m:
+            raise ValueError('`{0}` is not a valid coordinate value'.format(s))
+        g = m.groups()
+        if g[1] in ('', None) and g[2] in ('', None) and g[3] in ('', None):
+            raise ValueError('`{0}` is not a valid coordinate value'.format(s))
+        f = 0
+        if g[1]:
+            f += float(g[1])
+        if g[2]:
+            mf = float(g[2])
+            if mf >= 60:
+                raise ValueError('Invalid value for minutes: {0}'.format(mf))
+            f += mf / 60.0
+        if g[3]:
+            sf = float(g[3])
+            if sf >= 60:
+                raise ValueError('Invalid value for minutes: {0}'.format(mf))
+            f += sf / 3600.0
+        if g[0] == '-':
+            f = -f
+    return f
 
 
 def read_points(filename, encoding='utf-8'):

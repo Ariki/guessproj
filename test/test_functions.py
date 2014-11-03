@@ -30,6 +30,26 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(guessproj.parse_coord(b'-13'), -13)
         self.assertEqual(guessproj.parse_coord(u'56,25'), 56.25)
         self.assertEqual(guessproj.parse_coord(b'56,25'), 56.25)
+        self.assertEqual(guessproj.parse_coord(b'0'), 0)
+        self.assertEqual(guessproj.parse_coord(u'150d7\'30"'), 150.125)
+        self.assertEqual(guessproj.parse_coord(u'+150d7\'30"'), 150.125)
+        self.assertEqual(guessproj.parse_coord(u'-150d7\'30"'), -150.125)
+        self.assertEqual(guessproj.parse_coord(u'-0d'), 0)
+        self.assertEqual(guessproj.parse_coord(u'-7\'30"'), -0.125)
+        self.assertEqual(guessproj.parse_coord(u'-30"'), -1 / 120.0)
+        self.assertEqual(guessproj.parse_coord(b'-123,456d'), -123.456)
+        self.assertEqual(guessproj.parse_coord(b'+175d07.5\''), 175.125)
+        self.assertEqual(guessproj.parse_coord(b'-7,5\''), -0.125)
+        self.assertRaises(TypeError, lambda: guessproj.parse_coord(None))
+        self.assertRaises(ValueError, lambda: guessproj.parse_coord(u''))
+        self.assertRaises(ValueError, lambda: guessproj.parse_coord(u'1d2m3s'))
+        self.assertRaises(ValueError, lambda: guessproj.parse_coord(u'-'))
+        self.assertRaises(ValueError, lambda: guessproj.parse_coord(u'--2d'))
+        self.assertRaises(ValueError, lambda: guessproj.parse_coord(u'6-1'))
+        self.assertRaises(
+            ValueError, lambda: guessproj.parse_coord(b'1d60\'0"'))
+        self.assertRaises(
+            ValueError, lambda: guessproj.parse_coord(b'-140d09\'60.5"'))
 
     def test_read_points(self):
         """Test read_points() function"""
