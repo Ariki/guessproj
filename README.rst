@@ -14,7 +14,7 @@ accuracy will be achieved.
 Supported Python versions
 -------------------------
 
-Python 2.7 and 3.2+ are supported. It may work on other versions but not tested.
+Python 2.7 and 3.3+ are supported. It may work on other versions but not tested.
 The script is cross-platform. It's pure python itself but depends
 on some libraries that are not.
 
@@ -42,7 +42,8 @@ a datum transformation between coordinate systems.
 Obviously, the number of points must be not less than the number of unknown
 parameters to determine.
 
-DMS syntax is not supported yet, use decimal degrees instead.
+Both decimal format and degrees, minutes and seconds format
+(``XXXdXX'XX.XXX"``) are supported for coordinate values.
 You can use comma instead of period to separate fractional part.
 
 Command line  syntax
