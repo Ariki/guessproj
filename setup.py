@@ -9,8 +9,8 @@ import os
 from setuptools import setup
 
 vinfo = sys.version_info
-if vinfo < (2, 7) or (vinfo[0] == 3 and vinfo[1] < 3):
-    raise NotImplementedError('Only Python 2.7+ or 3.3+ are supported')
+if vinfo < (2, 6) or (vinfo[0] == 3 and vinfo[1] < 3):
+    raise NotImplementedError('Only Python 2.6+ or 3.3+ are supported')
 
 import guessproj
 
