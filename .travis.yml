@@ -31,4 +31,5 @@ deploy:
   on:
     repo: Ariki/guessproj
     branch: master
+    python: '2.6'
   distributions: 'sdist bdist_wheel'
