@@ -262,7 +262,6 @@ def print_projstring(projstring):
 
 def print_residuals(points, residuals):
     """Prints the residuals"""
-    # TODO: Handle encoding properly
     print('Residuals:')
     for i, pt in enumerate(points):
         r = residuals[i]
@@ -284,41 +283,33 @@ def print_wkt(projstring, esri=False, pretty=False):
         raise ImportError('Package GDAL not found')
 
 
+def generate_output(result_projstring, options):
+    """Outputs results in specified format"""
+    if '--proj' in options or '--proj4' in options:
+        print_projstring(result_projstring)
+    elif '--wkt' in options:
+        print_wkt(result_projstring, pretty='--pretty' in options)
+    elif '--esri' in options:
+        print_wkt(result_projstring, esri=True, pretty='--pretty' in options)
+    else:
+        print_projstring(result_projstring)
+        print_residuals(points, residuals)
+
+
 if __name__ == '__main__':
     src_proj, known, unknown, options, filename = parse_arguments(sys.argv)
-    if len(unknown) == 0 or options.get('-h') or options.get('--help'):
+    if len(unknown) == 0 or '-h' in options or '--help' in options:
         print_usage()
         sys.exit(0)
     encoding = options.get('--encoding', 'utf-8')
     points = read_points(filename, encoding)
     result_projstring, result_dict, residuals = find_params(
         src_proj, known, unknown, points)
-    # Projstring output
-    if '--proj' in options or '--proj4' in options:
-        if result_projstring:
-            print_projstring(result_projstring)
-            sys.exit(0)
-        else:
-            sys.exit(1)
-    # OGC WKT output
-    if '--wkt' in options:
-        if result_projstring:
-            print_wkt(result_projstring, pretty='--pretty' in options)
-            sys.exit(0)
-        else:
-            sys.exit(1)
-    # Esri WKT output
-    if '--esri' in options:
-        if result_projstring:
-            print_wkt(result_projstring, esri=True,
-                      pretty='--pretty' in options)
-            sys.exit(0)
-        else:
-            sys.exit(1)
-    # Default output
-    if result_projstring is None:
-        print('Solution not found')
+    if result_projstring:
+        generate_output(result_projstring, options)
+        sys.exit(0)
+    else:
+        if not(set(options.keys()) &
+               set(['--proj', '--proj4', '--wkt', '--esri',])):
+            print('Solution not found')
         sys.exit(1)
-    print_projstring(result_projstring)
-    print_residuals(points, residuals)
-    sys.exit(0)
