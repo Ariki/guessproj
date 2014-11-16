@@ -295,20 +295,24 @@ def generate_output(result_projstring, options):
         print_residuals(points, residuals)
 
 
-if __name__ == '__main__':
+def main():
     src_proj, known, unknown, options, filename = parse_arguments(sys.argv)
     if len(unknown) == 0 or '-h' in options or '--help' in options:
         print_usage()
-        sys.exit(0)
+        return 0
     encoding = options.get('--encoding', 'utf-8')
     points = read_points(filename, encoding)
     result_projstring, result_dict, residuals = find_params(
         src_proj, known, unknown, points)
     if result_projstring:
         generate_output(result_projstring, options)
-        sys.exit(0)
+        return 0
     else:
         if not(set(options.keys()) &
                set(['--proj', '--proj4', '--wkt', '--esri',])):
             print('Solution not found')
-        sys.exit(1)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())
