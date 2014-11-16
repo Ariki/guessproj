@@ -14,9 +14,8 @@ accuracy will be achieved.
 Supported Python versions
 -------------------------
 
-Python 2.7 and 3.3+ are supported. It may work on other versions but not tested.
-The script is cross-platform. It's pure python itself but depends
-on some libraries that are not.
+Python 2.6+ and 3.3+ are supported. The script is written in pure Python
+itself but depends on some packages that are not.
 
 Input data format
 -----------------
@@ -100,7 +99,7 @@ Option ``--wkt`` forces output of projection parameters in OGC WKT format
 (GDAL Python bindings required).
 
 Option ``--esri`` forces output of projection parameters in Esri WKT format
-(experimental, GDAL Python bindings required)
+(experimental, GDAL Python bindings required).
 
 Option ``--pretty`` forces pretty WKT formatting when used with ``--wkt``
 or ``--esri``.
@@ -109,6 +108,6 @@ Output
 ------
 
 The default output of the program is a projstring in which approximated values
-of parameters are replaced with exact values determined by the script,
-and a list of residual errors for each point.
-
+of parameters are replaced with the exact values found by the script,
+and a list of residual errors for each point. Other forms of output
+can be specified using program options.
