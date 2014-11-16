@@ -5,5 +5,11 @@ python:
   - "3.2"
   - "2.7"
   - "2.6"
-install: pip install pyproj numpy scipy
+install:
+  - sudo pip install conda
+  - sudo conda init
+  - sudo conda update conda --yes
+  - deps='pip numpy scipy pyproj gdal'
+  - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
+  - export PATH=$HOME/py/bin:$PATH
 script: python -m unittest discover test/
