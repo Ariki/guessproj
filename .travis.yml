@@ -30,3 +30,5 @@ deploy:
     secure: OVxkOvhQGUe029V9VM2ztGHAiH9IP282YChkn+aptwpdP87II5ONV+Qn3oxV0PaTCXCq6QnsaS5h7skxqKze+gwEUkoAmAoJk1NCP2GBXfEmYru8mnTiM9VA7OA4/3fPWwu8tb/WFFshEXPyggvIVoFr57iwCF4ujHOBy7BfoCs=
   on:
     repo: Ariki/guessproj
+    branch: master
+  distributions: 'sdist bdist_wheel'
