@@ -250,9 +250,8 @@ def read_points(filename, encoding='utf-8'):
 
 def print_usage():
     """Prints usage help"""
-    print('Usage: python {0} [--opts] +src_opts[=arg,] '
-          '+to +tgt_opts[=[~]arg,] filename'.format(
-              os.path.basename(__file__)))
+    print('Usage: {0} [--opts] +src_opts[=arg,] '
+          '+to +tgt_opts[=[~]arg,] filename'.format(sys.argv[0]))
 
 
 def print_projstring(projstring):
