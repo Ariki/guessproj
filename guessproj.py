@@ -6,7 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 __author__ = 'Alexei Ardyakov'
-__version__ = '0.01'
+__version__ = '0.02'
 __license__ = 'MIT'
 
 import codecs
