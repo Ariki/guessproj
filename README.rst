@@ -1,15 +1,15 @@
 guessproj:  Guessing parameters of cartographic projection
 ==========================================================
 
-``guessproj.py`` is a Python script that finds out unknown parameters
+``guessproj.py`` is a Python script that calculates unknown parameters
 of cartographic projection or coordinate system from coordinates
 of identical points in some known coordinate system and in unknown one.
 You should know projection type, though.
 The script can also determine parameters of transformation between two datums.
 
 The script uses ``pyproj`` and ``scipy`` to do its work.
-The method of least squares is used, so the more points you have, the better
-accuracy will be achieved.
+The method of least squares is used, so the more points you have,
+the better accuracy will be achieved.
 
 Supported Python versions
 -------------------------
@@ -62,7 +62,7 @@ values. The combination ``=~`` is the same as ``~``.
 
 Example::
 
-    guessproj.py +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +to \
+    guessproj +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +to \
       +proj=tmerc +ellps=krass +lat_0=0 +lon_0~44 +x_0=300000 +y_0~-4.7e6 \
       +towgs84=23.57,-140.95,-79.8,0,-0.35,-0.79,-0.22 points.txt
 
@@ -111,3 +111,16 @@ The default output of the program is a projstring in which approximated values
 of parameters are replaced with the exact values found by the script,
 and a list of residual errors for each point. Other forms of output
 can be specified using program options.
+
+Testing
+-------
+
+To run unit tests with Python 2.7 or 3.3+, execute in source directory:
+
+    python -m unittest discover test
+    
+In Python 2.6, you should install unittest2 package and use:
+
+    PYTHONPATH=. unit2 discover test
+    
+You can also run scripts from test/ directory directly.
