@@ -18,7 +18,7 @@ install:
 - deps='pip numpy scipy gdal'
 - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION $deps
 - source activate test-environment
-- pip install pyproj unittest2
+- pip install pyproj unittest2 wheel
 - python setup.py install
 script:
 - python test/test_cli.py
