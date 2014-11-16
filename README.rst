@@ -38,12 +38,12 @@ The coordinates in known coordinate system go first, followed by coordinates
 in unknown one. 3D points are mostly useful if there exists
 a datum transformation between coordinate systems.
 
-Obviously, the number of points must be not less than the number of unknown
-parameters to determine.
+Obviously, the number of point coordinate values must be not less
+than the number of unknown parameters to determine.
 
 Both decimal format and degrees, minutes and seconds format
 (``XXXdXX'XX.XXX"``) are supported for coordinate values.
-You can use comma instead of period to separate fractional part.
+You can use comma as well as period to separate fractional part.
 
 Command line  syntax
 --------------------
@@ -123,4 +123,4 @@ In Python 2.6, you should install unittest2 package and use:
 
     PYTHONPATH=. unit2 discover test
     
-You can also run scripts from test/ directory directly.
+You can also run scripts from ``test/`` directory directly.
