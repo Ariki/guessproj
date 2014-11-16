@@ -5,6 +5,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Desktop environments
+.directory
+
 # Distribution / packaging
 .Python
 env/
@@ -22,6 +25,9 @@ var/
 .installed.cfg
 *.egg
 
+# IDE and text editors
+*.kate-swp
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -36,18 +42,6 @@ coverage.xml
 
 # Translations
 *.mo
-
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-
-# Rope
-.ropeproject
-
-# Django stuff:
-*.log
-*.pot
 
 # Sphinx documentation
 docs/_build/
