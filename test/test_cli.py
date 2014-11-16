@@ -6,7 +6,10 @@ from __future__ import print_function
 
 import os
 import subprocess
-import unittest
+try:
+    import unittest2 as unittest
+except:
+    import unittest
 
 
 class TestFourPoints(unittest.TestCase):
