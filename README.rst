@@ -115,11 +115,11 @@ can be specified using program options.
 Testing
 -------
 
-To run unit tests with Python 2.7 or 3.3+, execute in source directory:
+To run unit tests with Python 2.7 or 3.3+, execute in source directory::
 
     python -m unittest discover test
     
-In Python 2.6, you should install unittest2 package and use:
+In Python 2.6, you should install unittest2 package and use::
 
     PYTHONPATH=. unit2 discover test
     
