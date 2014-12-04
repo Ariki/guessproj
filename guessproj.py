@@ -26,7 +26,7 @@ PY3 = sys.version_info[0] >= 3
 
 
 def to_str(s):
-    """Converts byte or unicode string to str type, assuming UTF-8 encoding"""
+    """Converts byte or unicode string to bytes type assuming UTF-8 encoding"""
     if s is None:
         return None
     if isinstance(s, str):
@@ -282,7 +282,7 @@ def print_wkt(projstring, esri=False, pretty=False):
         raise ImportError('Package GDAL not found')
 
 
-def generate_output(result_projstring, options):
+def generate_output(result_projstring, options, points, residuals):
     """Outputs results in specified format"""
     if '--proj' in options or '--proj4' in options:
         print_projstring(result_projstring)
@@ -305,7 +305,7 @@ def main():
     result_projstring, result_dict, residuals = find_params(
         src_proj, known, unknown, points)
     if result_projstring:
-        generate_output(result_projstring, options)
+        generate_output(result_projstring, options, points, residuals)
         return 0
     else:
         if not(set(options.keys()) &
