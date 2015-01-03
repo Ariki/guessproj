@@ -14,11 +14,17 @@ if vinfo < (2, 6) or (vinfo[0] == 3 and vinfo[1] < 3):
 
 import guessproj
 
+
+def read_file(filename):
+    full_name = os.path.join(os.path.dirname(__file__), filename)
+    with open(full_name, 'r') as fp:
+        return fp.read()
+
+
 setup(name='guessproj',
       version=guessproj.__version__,
       description='Script for guessing parameters of cartographic projection',
-      long_description='''Script for guessing parameters
-of cartographic projection''',
+      long_description=read_file('README.rst'),
       author=guessproj.__author__,
       author_email='ardjakov@rambler.ru',
       url='https://github.com/Ariki/guessproj',
@@ -42,5 +48,6 @@ of cartographic projection''',
                    'Programming Language :: Python :: 3.3',
                    'Programming Language :: Python :: 3.4',
                    'Topic :: Scientific/Engineering :: GIS',
+                   'Topic :: Utilities',
                    ],
     )
