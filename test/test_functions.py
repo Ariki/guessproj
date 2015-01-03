@@ -74,6 +74,21 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(pair2[1], 207338.73, places=3)
         self.assertEqual(name, 'pt1')
 
+    def test_refine_projstring(self):
+        """refine_projstring(projstring) returns normalized projstring"""
+        self.assertTrue(guessproj.osr)
+        test_data = [
+            ('+proj=longlat +no_defs',
+             '+proj=longlat +ellps=WGS84 +no_defs'),
+            # It is strange that osr.SpatialReference replaces +k_0 with +k
+            ('+k_0=0.9996 +proj=tmerc +lon_0=39 +no_defs',
+             '+proj=tmerc +lat_0=0 +lon_0=39 +k=0.9996 +x_0=0 +y_0=0 '
+             '+ellps=WGS84 +units=m +no_defs'),
+            ]
+        for orig, ctrl in test_data:
+            refined = guessproj.refine_projstring(orig).strip()
+            self.assertEqual(refined, ctrl)
+
 
 if __name__ == '__main__':
     unittest.main()

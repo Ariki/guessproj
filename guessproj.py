@@ -17,8 +17,9 @@ from functools import partial
 from pyproj import Proj, transform
 from scipy.optimize import leastsq
 
+# osgeo package is optional (used for WKT output and projstring normalization)
 try:
-    from osgeo import osr # GDAL is optional (used for WKT output)
+    from osgeo import osr
 except:
     osr = False
 
@@ -36,6 +37,15 @@ def to_str(s):
     elif not PY3 and isinstance(s, unicode):
         return s.encode('utf-8')
     raise ValueError('Cannot convert {0} to str'.format(s))
+
+
+def refine_projstring(projstring):
+    """Refines projstring using osgeo package"""
+    if osr:
+        srs = osr.SpatialReference()
+        srs.ImportFromProj4(to_str(projstring))
+        return srs.ExportToProj4()
+    return projstring
 
 
 def target_func_template(points, src_proj, tgt_template, params):
@@ -109,7 +119,7 @@ def find_params(src_proj, tgt_known, tgt_unknown, points):
     # Formatting outputs
     if ier not in (1, 2, 3, 4):
         return None, None, None
-    result_projstring = tgt_template.format(*x)
+    result_projstring = refine_projstring(tgt_template.format(*x))
     result_dict = dict(zip(var_names, x))
     fvec = infodict['fvec']
     residuals = []
