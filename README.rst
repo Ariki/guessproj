@@ -1,13 +1,13 @@
 guessproj:  Guessing parameters of cartographic projection
 ==========================================================
 
-``guessproj.py`` is a Python script that calculates unknown parameters
+``guessproj`` is a Python script that calculates unknown parameters
 of cartographic projection or coordinate system from coordinates
 of identical points in some known coordinate system and in unknown one.
 You should know projection type, though.
 The script can also determine parameters of transformation between two datums.
 
-The script uses ``pyproj`` and ``scipy`` to do its work.
+The script uses ``pyproj`` and ``scipy`` internally.
 The method of least squares is used, so the more points you have,
 the better accuracy will be achieved.
 
@@ -16,6 +16,46 @@ Supported Python versions
 
 Python 2.6+ and 3.3+ are supported. The script is written in pure Python
 itself but depends on some packages that are not.
+
+Installation
+------------
+
+The best way to install ``guessproj`` is using
+`pip <https://pip.pypa.io/en/latest/quickstart.html>`_: ::
+
+    pip install guessproj
+    
+Be aware that ``guessproj`` has some binary dependencies that you need
+to install before trying to install ``guessproj``.
+These are `GDAL <http://www.gdal.org/>`_
+and `PROJ.4 <http://trac.osgeo.org/proj/>`_.
+If you are a GIS specialist you probably already have these libraries.
+You also need Python bindings for them (
+`GDAL bindings <https://pypi.python.org/pypi/GDAL/>`_
+and `pyproj <https://pypi.python.org/pypi/pyproj/>`_) as well as
+`NumPy <https://pypi.python.org/pypi/numpy/>`_
+and `SciPy <https://pypi.python.org/pypi/scipy/>`_ packages.
+The ``pip`` tool will try to install these packages automatically
+but on most systems you'll need to install them in a platform-specific way.
+
+Note that GDAL is an optional dependency but may become required in future
+versions of ``guessproj``.
+
+Instead of using ``pip``, you can download the source archive,
+unpack it and run ::
+
+    python setup.py install
+    
+in the unpacked directory. You need
+`setuptools <https://pypi.python.org/pypi/setuptools/>`_ to do this.
+
+Also, you can use ``guessproj`` without installation. Just download
+the file `guessproj.py <https://raw.githubusercontent.com/Ariki/guessproj/master/guessproj.py>`_
+and run it like any Python script::
+
+    python guessproj.py --help
+    
+You still need dependencies to be installed, of course.
 
 Input data format
 -----------------
@@ -73,12 +113,12 @@ where initial approximations of the unknown parameters are marked with ``~``.
 In this example, parameters ``+lon_0`` and ``+y_0`` are unknown. The last argument
 is a name of input text file containing point coordinates.
 
-The script can evaluate only numeric parameters, so you should specify
+The script can evaluate numeric parameters only, so you should specify
 at least ``+proj`` and ``+ellps``. It's worth mentioning, also, that some
 parameters have the same (or nearly the same) effect, so it's a bad idea,
 for example, to specify both ``+lat_0`` and ``+y_0`` as unknown
 for Transverse Mercator projection. The system of equations will be
-ill-determined.
+ill-determined in that case.
 
 Options
 -------
@@ -111,6 +151,9 @@ The default output of the program is a projstring in which approximated values
 of parameters are replaced with the exact values found by the script,
 and a list of residual errors for each point. Other forms of output
 can be specified using program options.
+
+If GDAL bindings are installed, the projstring will be formatted
+so as to be represented in a normalized form.
 
 Testing
 -------
