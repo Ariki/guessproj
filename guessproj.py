@@ -213,7 +213,7 @@ def parse_coord(s):
 
 
 def read_points(filename, encoding='utf-8'):
-    """Reads points from file"""
+    """Reads points from a file"""
     points = []
     with codecs.open(filename, 'r', encoding) as fp:
         for line in fp:
@@ -248,10 +248,10 @@ def read_points(filename, encoding='utf-8'):
     return points
 
 
-def print_usage():
+def print_usage(program_name):
     """Prints usage help"""
     print('Usage: {0} [--opts] +src_opts[=arg,] '
-          '+to +tgt_opts[=[~]arg,] filename'.format(sys.argv[0]))
+          '+to +tgt_opts[=[~]arg,] filename'.format(program_name))
 
 
 def print_projstring(projstring):
@@ -295,10 +295,13 @@ def generate_output(result_projstring, options, points, residuals):
         print_residuals(points, residuals)
 
 
-def main():
-    src_proj, known, unknown, options, filename = parse_arguments(sys.argv)
+def arg_main(argv):
+    """The variant of main() that expects sys.argv as a function argument
+    (intended for use in tests or wrapper scripts)
+    """
+    src_proj, known, unknown, options, filename = parse_arguments(argv)
     if len(unknown) == 0 or '-h' in options or '--help' in options:
-        print_usage()
+        print_usage(argv[0])
         return 0
     encoding = options.get('--encoding', 'utf-8')
     points = read_points(filename, encoding)
@@ -312,6 +315,11 @@ def main():
                set(['--proj', '--proj4', '--wkt', '--esri',])):
             print('Solution not found')
         return 1
+
+
+def main():
+    """The script entry point used in setup.py"""
+    return arg_main(sys.argv)
 
 
 if __name__ == '__main__':
