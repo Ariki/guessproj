@@ -51,6 +51,19 @@ class TestFourPoints(unittest.TestCase):
         self.assertAlmostEqual(float(params['+x_0']), 3e5, places=2)
         self.assertAlmostEqual(float(params['+y_0']), -5e6, places=2)
 
+    def test_default(self):
+        """Tests default output"""
+        cmd = ('python "{0}" +to +proj=tmerc +ellps=krass '
+               '+lat_0=0 +lon_0=39 +x_0~0 +y_0~0 +no_defs '
+               ' "{1}"'.format(
+                   self.script_path, self.input_file))
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        exit_code = p.wait()
+        self.assertEqual(exit_code, 0)
+        self.assertFalse(err)
+        self.assertIn('Residuals', output.decode('utf-8'))
+
 
 if __name__ == '__main__':
     unittest.main()

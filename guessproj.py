@@ -248,78 +248,77 @@ def read_points(filename, encoding='utf-8'):
     return points
 
 
-def print_usage(program_name):
-    """Prints usage help"""
-    print('Usage: {0} [--opts] +src_opts[=arg,] '
-          '+to +tgt_opts[=[~]arg,] filename'.format(program_name))
+def usage_help(program_name):
+    """Returns usage help string"""
+    return ('Usage: {0} [--opts] +src_opts[=arg,] '
+            '+to +tgt_opts[=[~]arg,] filename'.format(program_name))
 
 
-def print_projstring(projstring):
-    """Prints the projstring :) """
-    print(projstring)
-
-
-def print_residuals(points, residuals):
-    """Prints the residuals"""
-    print('Residuals:')
+def format_residuals(points, residuals):
+    """Returns the residuals as a text string"""
+    s = 'Residuals:\n'
     for i, pt in enumerate(points):
         r = residuals[i]
         if len(r) == 2:
-            print('{0}\t{1}\t\t{2}'.format(r[0], r[1], pt[2]))
+            s += '{0}\t{1}\t\t{2}\n'.format(r[0], r[1], pt[2])
         else:
-            print('{0}\t{1}\t{2}\t{3}'.format(r[0], r[1], r[2], pt[2]))
+            s += '{0}\t{1}\t{2}\t{3}\n'.format(r[0], r[1], r[2], pt[2])
+    return s
 
 
-def print_wkt(projstring, esri=False, pretty=False):
-    """Prints projection parameters as well-known text"""
-    if osr:
-        srs = osr.SpatialReference()
-        srs.ImportFromProj4(to_str(projstring))
-        if esri:
-            srs.MorphToESRI()
-        print(srs.ExportToPrettyWkt() if pretty else srs.ExportToWkt())
-    else:
+def to_wkt(projstring, esri=False, pretty=False):
+    """Returns projection parameters as well-known text"""
+    if not osr:
         raise ImportError('Package GDAL not found')
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(to_str(projstring))
+    if esri:
+        srs.MorphToESRI()
+    return srs.ExportToPrettyWkt() if pretty else srs.ExportToWkt()
 
 
-def generate_output(result_projstring, options, points, residuals):
+def generate_output(outfile, result_projstring, options, points, residuals):
     """Outputs results in specified format"""
     if '--proj' in options or '--proj4' in options:
-        print_projstring(result_projstring)
+        outfile.write(result_projstring)
     elif '--wkt' in options:
-        print_wkt(result_projstring, pretty='--pretty' in options)
+        outfile.write(to_wkt(result_projstring, pretty='--pretty' in options))
     elif '--esri' in options:
-        print_wkt(result_projstring, esri=True, pretty='--pretty' in options)
+        outfile.write(
+            to_wkt(result_projstring, esri=True, pretty='--pretty' in options))
     else:
-        print_projstring(result_projstring)
-        print_residuals(points, residuals)
+        outfile.write(result_projstring)
+        outfile.write('\n')
+        outfile.write(format_residuals(points, residuals))
+    outfile.write('\n')
 
 
-def arg_main(argv):
-    """The variant of main() that expects sys.argv as a function argument
-    (intended for use in tests or wrapper scripts)
+def arg_main(argv, outfile):
+    """The variant of main() that expects sys.argv and sys.stdout
+    as function arguments (for use in tests or wrapper scripts)
     """
     src_proj, known, unknown, options, filename = parse_arguments(argv)
     if len(unknown) == 0 or '-h' in options or '--help' in options:
-        print_usage(argv[0])
+        outfile.write(usage_help(argv[0]))
+        outfile.write('\n')
         return 0
     encoding = options.get('--encoding', 'utf-8')
     points = read_points(filename, encoding)
     result_projstring, result_dict, residuals = find_params(
         src_proj, known, unknown, points)
     if result_projstring:
-        generate_output(result_projstring, options, points, residuals)
+        generate_output(outfile, result_projstring, options, points, residuals)
         return 0
     else:
         if not(set(options.keys()) &
                set(['--proj', '--proj4', '--wkt', '--esri',])):
-            print('Solution not found')
+            outfile.write('Solution not found\n')
         return 1
 
 
 def main():
     """The script entry point used in setup.py"""
-    return arg_main(sys.argv)
+    return arg_main(sys.argv, sys.stdout)
 
 
 if __name__ == '__main__':
