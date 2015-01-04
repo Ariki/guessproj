@@ -88,6 +88,20 @@ class TestFunctions(unittest.TestCase):
         for orig, ctrl in test_data:
             refined = guessproj.refine_projstring(orig).strip()
             self.assertEqual(refined, ctrl)
+            
+    def test_find_residuals(self):
+        """find_residuals() transforms the points and calculates residuals"""
+        src_proj = '+proj=longlat +ellps=WGS84 +no_defs'
+        tgt_proj = '+proj=tmerc +ellps=krass +lon_0=39 +x_0=3e5 +y_0=-5e6'
+        filename = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'four_points.txt')
+        points = guessproj.read_points(filename, 'cp1251')
+        residuals = guessproj.find_residuals(src_proj, tgt_proj, points)
+        self.assertEqual(len(residuals), 4)
+        for p in residuals:
+            self.assertEqual(len(p), 2)
+            for r in p:
+                self.assertLess(abs(r), 0.01)
 
 
 if __name__ == '__main__':

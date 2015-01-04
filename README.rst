@@ -115,6 +115,9 @@ for example, to specify both ``+lat_0`` and ``+y_0`` as unknown
 for Transverse Mercator projection. The system of equations will be
 ill-determined in that case.
 
+If no unknown parameters specified, the script will just transform the points
+and calculate residual errors for each coordinate value.
+
 Options
 -------
 
