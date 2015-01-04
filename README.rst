@@ -21,20 +21,16 @@ Installation
 ------------
 
 The best way to install ``guessproj`` is using
-`pip <https://pip.pypa.io/en/latest/quickstart.html>`_: ::
+`pip <https://pip.pypa.io/en/latest/quickstart.html>`_::
 
     pip install guessproj
     
 Be aware that ``guessproj`` has some binary dependencies that you need
 to install before trying to install ``guessproj``.
-These are `GDAL <http://www.gdal.org/>`_
-and `PROJ.4 <http://trac.osgeo.org/proj/>`_.
+These are `GDAL`_ and `PROJ.4`_.
 If you are a GIS specialist you probably already have these libraries.
-You also need Python bindings for them (
-`GDAL bindings <https://pypi.python.org/pypi/GDAL/>`_
-and `pyproj <https://pypi.python.org/pypi/pyproj/>`_) as well as
-`NumPy <https://pypi.python.org/pypi/numpy/>`_
-and `SciPy <https://pypi.python.org/pypi/scipy/>`_ packages.
+You also need Python bindings for them (`GDAL bindings`_ and `pyproj`_)
+as well as `NumPy`_ and `SciPy`_ packages.
 The ``pip`` tool will try to install these packages automatically
 but on most systems you'll need to install them in a platform-specific way.
 
@@ -46,12 +42,10 @@ unpack it and run ::
 
     python setup.py install
     
-in the unpacked directory. You need
-`setuptools <https://pypi.python.org/pypi/setuptools/>`_ to do this.
+in the unpacked directory. You need `setuptools`_ to do this.
 
 Also, you can use ``guessproj`` without installation. Just download
-the file `guessproj.py <https://raw.githubusercontent.com/Ariki/guessproj/master/guessproj.py>`_
-and run it like any Python script::
+the file `guessproj.py`_ and run it like any Python script::
 
     python guessproj.py --help
     
@@ -89,10 +83,11 @@ Command line  syntax
 --------------------
 
 Command line syntax used to run the script is similar to that of ``cs2cs``
-utility which comes with ``proj4`` library. You should specify parameters
-of known coordinate system in projstring format, known and unknown parameters
-of the unknown system, and a path to input file. Exact parameters of various
-coordinate systems you can find in ``proj4`` documentation.
+utility which comes with ``PROJ.4`` library. You should specify parameters
+of known coordinate system in ``PROJ.4`` format (referred as projstring here),
+known and unknown parameters of the unknown system, and a path to input file.
+Exact parameters of various coordinate systems you can find
+in `PROJ.4 documentation`_.
 
 The unknown parameters are specified among all others in the projstring,
 the only difference is using ``~`` symbol instead of ``=``. The numeric value
@@ -167,3 +162,14 @@ In Python 2.6, you should install unittest2 package and use::
     PYTHONPATH=. unit2 discover test
     
 You can also run scripts from ``test/`` directory directly.
+
+
+.. _GDAL: http://www.gdal.org/
+.. _PROJ.4: http://trac.osgeo.org/proj/
+.. _GDAL bindings: https://pypi.python.org/pypi/GDAL/
+.. _pyproj: https://pypi.python.org/pypi/pyproj/
+.. _NumPy: https://pypi.python.org/pypi/numpy/
+.. _SciPy: https://pypi.python.org/pypi/scipy/
+.. _setuptools: https://pypi.python.org/pypi/setuptools/
+.. _guessproj.py: https://raw.githubusercontent.com/Ariki/guessproj/master/guessproj.py
+.. _PROJ.4 documentation: https://trac.osgeo.org/proj/wiki/GenParms
