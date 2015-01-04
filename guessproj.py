@@ -70,6 +70,23 @@ def target_func_template(points, src_proj, tgt_template, params):
     return result
     
 
+def find_residuals(src_proj, tgt_proj, points):
+    """Transforms the points and calculates the residuals"""
+    p1 = Proj(to_str(src_proj))
+    p2 = Proj(to_str(tgt_proj))
+    residuals = []
+    for pt in points:
+        if len(pt[0]) == 2:
+            tpt = transform(p1, p2, pt[0][0], pt[0][1])
+        elif len(pt[0]) == 3:
+            tpt = transform(p1, p2, pt[0][0], pt[0][1], pt[0][2])
+        else:
+            raise ValueError('Two or three coordinates expected')
+        pt_residuals = [pt[1][i] - tpt[i] for i in range(len(pt[1]))]
+        residuals.append(pt_residuals)
+    return residuals
+    
+
 def find_params(src_proj, tgt_known, tgt_unknown, points):
     """Finds unknown params of target projection
     using least squares method
@@ -110,6 +127,13 @@ def find_params(src_proj, tgt_known, tgt_unknown, points):
             tgt_template += '{' + str(var_index) + '}'
             var_index += 1
     tgt_template = tgt_template.strip()
+    # If all parameters are known, calculate the residuals
+    if not tgt_unknown:
+        return (
+            refine_projstring(tgt_template),
+            {},
+            find_residuals(src_proj, tgt_template, points)
+            )
     # Creating target function
     tgt_func = partial(target_func_template,
                        points, src_proj, tgt_template)
@@ -308,7 +332,7 @@ def arg_main(argv, outfile):
     as function arguments (for use in tests or wrapper scripts)
     """
     src_proj, known, unknown, options, filename = parse_arguments(argv)
-    if len(unknown) == 0 or '-h' in options or '--help' in options:
+    if '-h' in options or '--help' in options:
         outfile.write(usage_help(argv[0]))
         outfile.write('\n')
         return 0
