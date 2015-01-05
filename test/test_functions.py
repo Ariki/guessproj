@@ -79,7 +79,7 @@ class TestFunctions(unittest.TestCase):
             ValueError, lambda: guessproj.parse_coord(b'-140d09\'60.5"'))
 
     def test_read_points(self):
-        """Test read_points() function"""
+        """read_points() function reads points data from a text file"""
         # TODO: Implement test that covers all features
         filename = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
@@ -97,10 +97,9 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(pair2[0], 3e5, places=3)
         self.assertAlmostEqual(pair2[1], 207338.73, places=3)
         self.assertEqual(name, 'pt1')
-
+        
     def test_refine_projstring(self):
         """refine_projstring(projstring) returns normalized projstring"""
-        self.assertTrue(guessproj.osr)
         test_data = [
             ('+proj=longlat +no_defs',
              '+proj=longlat +ellps=WGS84 +no_defs'),
@@ -112,7 +111,42 @@ class TestFunctions(unittest.TestCase):
         for orig, ctrl in test_data:
             refined = guessproj.refine_projstring(orig).strip()
             self.assertEqual(refined, ctrl)
-            
+    
+    def test_parse_arguments(self):
+        """parse_arguments() parses command line arguments"""
+        src_proj, tgt_params, options, input_file = guessproj.parse_arguments([
+            'guessproj', '--wkt', b'+proj=longlat', '+ellps=WGS84',
+            '+towgs84=0,0,0', '+to', '+proj=tmerc', '+ellps=krass',
+            '+towgs84=~30.5,-140,~-80', '+lon_0=33', '+x_0=6.5e6',
+            '--k_0~1', '--y_0=0', '--encoding=cp1251', 'filename.txt',
+            ])
+        self.assertEqual(src_proj, '+proj=longlat +ellps=WGS84 +towgs84=0,0,0')
+        self.assertDictEqual(tgt_params, {
+            '+proj': ['tmerc'], '+ellps': ['krass'],
+            '+towgs84': [30.5, '-140', -80.0],
+            '+lon_0': ['33'], '+x_0': ['6.5e6'],
+            '--k_0': [1.0], '--y_0': ['0'],
+            })
+        self.assertDictEqual(options, {'--wkt': True, '--encoding': 'cp1251'})
+        self.assertEqual(input_file, 'filename.txt')
+        
+    def test_prepare_template(self):
+        """prepare_template() returns template and list of initial values"""
+        template, initial_values = guessproj.prepare_template({
+            '+proj': ['tmerc'], '+ellps': ['krass'],
+            '+towgs84': [30.5, '-140', -80.0],
+            '+lon_0': ['33'], '+x_0': ['6.5e6'],
+            '--k_0': [1.0], '--y_0': ['0'],
+            })
+        self.assertIn('+proj=tmerc', template)
+        self.assertIn('+ellps=krass', template)
+        self.assertIn('+towgs84={', template)
+        self.assertIn('+lon_0=33', template)
+        self.assertIn('+x_0=6.5e6', template)
+        self.assertNotIn('--k_0', template)
+        self.assertNotIn('--y_0', template)
+        self.assertEqual(len(initial_values), 2)
+    
     def test_find_residuals(self):
         """find_residuals() transforms the points and calculates residuals"""
         src_proj = '+proj=longlat +ellps=WGS84 +no_defs'

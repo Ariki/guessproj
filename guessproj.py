@@ -13,20 +13,14 @@ import codecs
 import os
 import re
 import sys
-from functools import partial
-from pyproj import Proj, transform
+from osgeo import osr
 from scipy.optimize import leastsq
-
-# osgeo package is optional (used for WKT output and projstring normalization)
-try:
-    from osgeo import osr
-except:
-    osr = False
 
 # Python version compatibility
 PY3 = sys.version_info[0] >= 3
 if PY3:
     unicode = str
+    long = int
 
 
 def to_str(s, encoding='utf-8'):
@@ -57,111 +51,89 @@ def to_unicode(s, encoding='utf-8'):
 
 
 def refine_projstring(projstring):
-    """Refines projstring using osgeo package"""
-    if osr:
-        srs = osr.SpatialReference()
-        srs.ImportFromProj4(to_str(projstring))
-        return srs.ExportToProj4()
+    """Reformats the projstring in standardized way"""
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(to_str(projstring))
+    return srs.ExportToProj4()
     return projstring
-
-
-def target_func_template(points, src_proj, tgt_template, params):
-    """Target function template (the real target function is a result
-    of partial application of the template with first 3 arguments known)
-    """
-    tgt_proj = tgt_template.format(*params)
-    p1 = Proj(to_str(src_proj))
-    p2 = Proj(to_str(tgt_proj))
-    result = []
-    for pt in points:
-        if len(pt[0]) == 2:
-            tpt = transform(p1, p2, pt[0][0], pt[0][1])
-        elif len(pt[0]) == 3:
-            tpt = transform(p1, p2, pt[0][0], pt[0][1], pt[0][2])
-        else:
-            raise ValueError('Two or three coordinates expected')
-        result.append(pt[1][0] - tpt[0])
-        result.append(pt[1][1] - tpt[1])
-        if len(pt[0]) == 3 and len(pt[1]) == 3:
-            result.append(pt[0][2] - tpt[2])
-    return result
     
 
 def find_residuals(src_proj, tgt_proj, points):
     """Transforms the points and calculates the residuals"""
-    p1 = Proj(to_str(src_proj))
-    p2 = Proj(to_str(tgt_proj))
+    src_srs = osr.SpatialReference()
+    src_srs.ImportFromProj4(to_str(src_proj))
+    tgt_srs = osr.SpatialReference()
+    tgt_srs.ImportFromProj4(to_str(tgt_proj))
+    transform = osr.CoordinateTransformation(src_srs, tgt_srs)
     residuals = []
     for pt in points:
-        if len(pt[0]) == 2:
-            tpt = transform(p1, p2, pt[0][0], pt[0][1])
-        elif len(pt[0]) == 3:
-            tpt = transform(p1, p2, pt[0][0], pt[0][1], pt[0][2])
-        else:
-            raise ValueError('Two or three coordinates expected')
+        tpt = transform.TransformPoint(*pt[0])
         pt_residuals = [pt[1][i] - tpt[i] for i in range(len(pt[1]))]
         residuals.append(pt_residuals)
     return residuals
     
 
-def find_params(src_proj, tgt_known, tgt_unknown, points):
+def prepare_template(tgt_params):
+    """Creates target projstring template and list of initial values"""
+    template = ''
+    initial_values = []
+    for name, value in tgt_params.items():
+        if name.startswith('+'):
+            template += name
+            if len(value) > 0:
+                template += '='
+                subvalues = []
+                var_count = 0
+                for subval in value:
+                    if isinstance(subval, (float, int, long)):
+                        subvalues.append(
+                            '{' + str(len(initial_values)) + '}')
+                        initial_values.append(subval)
+                        var_count += 1
+                    else:
+                        subvalues.append(subval)
+                template += ','.join(subvalues)
+            template += ' '
+    return template, initial_values
+
+
+def find_params(src_proj, tgt_params, points):
     """Finds unknown params of target projection
     using least squares method
     """
-    # Sorting params (some of them can have dot separated index)
-    param_list = []
-    for param_dict, is_known in ((tgt_known, True), (tgt_unknown, False)):
-        for k in param_dict.keys():
-            if '.' in k:
-                k1, k2 = k.split('.')
-                k2 = int(k2)
-            else:
-                k1, k2 = k, 0
-            param_list.append((k1, k2, param_dict[k], is_known))
-    param_list.sort()
-    # Constructing target projection template
-    start_values, var_names = [], []
-    tgt_template = ''
-    var_index = 0
-    for p in param_list:
-        if p[1] == 0:
-            tgt_template += ' +{0}'.format(p[0])
-        else:
-            tgt_template += ','
-        if p[3]: # Known value
-            if p[2] is not None:
-                if p[1] == 0:
-                    tgt_template += '={0}'.format(p[2])
-                else:
-                    tgt_template += '{0}'.format(p[2])
-        else: # Unknown value
-            start_values.append(p[2])
-            if p[1] == 0:
-                var_names.append(p[0])
-                tgt_template += '='
-            else:
-                var_names.append('{0}.{1}'.format(p[0], p[1]))
-            tgt_template += '{' + str(var_index) + '}'
-            var_index += 1
-    tgt_template = tgt_template.strip()
+    src_srs = osr.SpatialReference()
+    src_srs.ImportFromProj4(to_str(src_proj))
+    tgt_template, initial_values = prepare_template(tgt_params)
+    proj_param_count = len(initial_values)
+    
+    def target(xs):
+        """Target function"""
+        tgt_proj = tgt_template.format(*xs[:proj_param_count])
+        tgt_srs = osr.SpatialReference()
+        tgt_srs.ImportFromProj4(to_str(tgt_proj))
+        transform = osr.CoordinateTransformation(src_srs, tgt_srs)
+        result = []
+        for pt in points:
+            tpt = transform.TransformPoint(*pt[0])
+            result.append(pt[1][0] - tpt[0])
+            result.append(pt[1][1] - tpt[1])
+            if len(pt[0]) == 3 and len(pt[1]) == 3:
+                result.append(pt[0][2] - tpt[2])
+        return result
+    
     # If all parameters are known, calculate the residuals
-    if not tgt_unknown:
+    if not initial_values:
         return (
             refine_projstring(tgt_template),
-            {},
             find_residuals(src_proj, tgt_template, points)
             )
-    # Creating target function
-    tgt_func = partial(target_func_template,
-                       points, src_proj, tgt_template)
     # Solving the problem
     x, cov_x, infodict, mesg, ier = leastsq(
-        tgt_func, start_values, ftol=1e-12, full_output=True)
+        target, initial_values, ftol=1e-12, full_output=True)
     # Formatting outputs
     if ier not in (1, 2, 3, 4):
         return None, None, None
     result_projstring = refine_projstring(tgt_template.format(*x))
-    result_dict = dict(zip(var_names, x))
     fvec = infodict['fvec']
     residuals = []
     i = 0
@@ -172,60 +144,70 @@ def find_params(src_proj, tgt_known, tgt_unknown, points):
         else:
             residuals.append(tuple(fvec[i:i + 2]))
             i += 2
-    return result_projstring, result_dict, residuals
+    return result_projstring, residuals
 
 
 def parse_arguments(argv):
-    """Parses command line arguments of the program"""
+    """Parses command line arguments of the program
+    and returns source projection Proj4 string,
+    dict of target projection parameters, and input filename (or file object).
+    Each parameter is represented as a list of subparameters
+    which may be strings(known parameters) or floats (unknown ones).
+    """
+    tgt_option_re = re.compile(r'^(--[kxyz]_0)(=|~|=~)(.*)$')
+    param_re = re.compile(r'^(\+[0-9a-zA-Z_]+)=?(.*)?$')
     src_params = []
-    known, unknown, options = {}, {}, {}
-    filename = None
-    parsing_target = False
+    options, tgt_params = {}, {}
+    input_file = None
+    src_parsing_mode = True
     for arg in argv[1:]:
+        if hasattr(arg, 'read'): # Can accept file object instead of filename
+            if input_file:
+                raise ValueError('Multiple input files are not supported')
+            input_file = arg
+            continue
         arg = to_unicode(arg, sys.getfilesystemencoding())
         if arg.startswith('-'):
-            splitarg = arg.split('=', 1)
-            if len(splitarg) == 2:
-                options[splitarg[0]] = splitarg[1]
+            m = tgt_option_re.match(arg)
+            if m: # The option changes target function behavior
+                pname, delimiter, pvalue = m.groups()
+                pknown = delimiter == '='
+                tgt_params[pname] = [pvalue] if pknown else [float(pvalue)]
+            else: # The option doesn't changes target function behavior
+                splitarg = arg.split('=', 1)
+                if len(splitarg) == 2:
+                    options[splitarg[0]] = splitarg[1]
+                else:
+                    options[arg] = True
+        elif src_parsing_mode:
+            if arg == '+to': # End of source projection parameters
+                src_parsing_mode = False
+            elif arg.startswith('+'): # Source projection parameter
+                src_params.append(arg)
             else:
-                options[arg] = True
-        elif parsing_target:
-            if arg.startswith('+'):
-                param_re = re.compile(r'^\+([0-9a-zA-Z_]+)([=~].*)?$')
+                raise ValueError('Unexpected token: {0}'.format(arg))
+        else: # Target projection parameters
+            if arg.startswith('+'): # Target projection parameter
                 m = param_re.match(arg)
                 if not m:
                     raise ValueError('Invalid parameter: {0}'.format(arg))
                 pname, pvalue = m.groups()
-                if not pvalue:
-                    known[pname] = None
-                else:
+                if pvalue:
                     subvalues = pvalue.split(',')
-                    for i, sv in enumerate(subvalues):
-                        extpname = pname + ('.' + str(i) if i else '')
-                        if sv.startswith('~'):
-                            unknown[extpname] = float(sv[1:])
-                        elif sv.startswith('=~'):
-                            unknown[extpname] = float(sv[2:])
-                        elif sv.startswith('='):
-                            known[extpname] = sv[1:]
-                        else:
-                            known[extpname] = sv
-            else:
-                if filename:
+                    tgt_params[pname] = [
+                        float(v[1:]) if v.startswith('~') else v
+                        for v in subvalues]
+                else:
+                    tgt_params[pname] = []
+            else: # File name
+                if input_file:
                     raise ValueError('Multiple input files are not supported')
-                filename = arg
-        else:
-            if arg == '+to':
-                parsing_target = True
-            elif arg.startswith('+'):
-                src_params.append(arg)
-            else:
-                raise ValueError('Unexpected token: {0}'.format(arg))
+                input_file = arg
     if src_params:
         src_proj = ' '.join(src_params)
     else:
         src_proj = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
-    return (src_proj, known, unknown, options, filename)
+    return src_proj, tgt_params, options, input_file
 
 
 def parse_coord(s):
@@ -266,6 +248,7 @@ def parse_coord(s):
 
 def read_points(filename, encoding='utf-8'):
     """Reads points from a file"""
+    # TODO: Allow file object for the first argument
     points = []
     with codecs.open(filename, 'r', encoding) as fp:
         for line in fp:
@@ -320,8 +303,6 @@ def format_residuals(points, residuals):
 
 def to_wkt(projstring, esri=False, pretty=False):
     """Returns projection parameters as well-known text"""
-    if not osr:
-        raise ImportError('Package osgeo not found')
     srs = osr.SpatialReference()
     srs.ImportFromProj4(to_str(projstring))
     if esri:
@@ -331,8 +312,6 @@ def to_wkt(projstring, esri=False, pretty=False):
 
 def to_mapinfo(projstring):
     """Returns projection parameters as MapInfo CoordSys definition"""
-    if not osr:
-        raise ImportError('Package osgeo not found')
     srs = osr.SpatialReference()
     srs.ImportFromProj4(to_str(projstring))
     return srs.ExportToMICoordSys()
@@ -360,21 +339,21 @@ def arg_main(argv, outfile):
     """The variant of main() that expects sys.argv and sys.stdout
     as function arguments (for use in tests or wrapper scripts)
     """
-    src_proj, known, unknown, options, filename = parse_arguments(argv)
+    src_proj, tgt_params, options, input_file = parse_arguments(argv)
     if '-h' in options or '--help' in options:
         outfile.write(usage_help(argv[0]))
         outfile.write('\n')
         return 0
     encoding = options.get('--encoding', 'utf-8')
-    points = read_points(filename, encoding)
-    result_projstring, result_dict, residuals = find_params(
-        src_proj, known, unknown, points)
+    points = read_points(input_file, encoding)
+    result_projstring, residuals = find_params(
+        src_proj, tgt_params, points)
     if result_projstring:
         generate_output(outfile, result_projstring, options, points, residuals)
         return 0
     else:
         if not(set(options.keys()) &
-               set(['--proj', '--proj4', '--wkt', '--esri',])):
+               set(['--proj', '--proj4', '--wkt', '--esri', '--mapinfo'])):
             outfile.write('Solution not found\n')
         return 1
 
