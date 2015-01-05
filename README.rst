@@ -142,6 +142,11 @@ Option ``--esri`` forces output of projection parameters in Esri WKT format
 Option ``--pretty`` forces pretty WKT formatting when used with ``--wkt``
 or ``--esri``.
 
+Option ``--mapinfo`` forces output of projection parameters in MapInfo CoordSys
+format (experimental, GDAL Python bindings required). Be aware that current
+GDAL based implementation does not handle datum and ellipsoid parameters
+correctly.
+
 Output
 ------
 
