@@ -303,12 +303,21 @@ def format_residuals(points, residuals):
 def to_wkt(projstring, esri=False, pretty=False):
     """Returns projection parameters as well-known text"""
     if not osr:
-        raise ImportError('Package GDAL not found')
+        raise ImportError('Package osgeo not found')
     srs = osr.SpatialReference()
     srs.ImportFromProj4(to_str(projstring))
     if esri:
         srs.MorphToESRI()
     return srs.ExportToPrettyWkt() if pretty else srs.ExportToWkt()
+
+
+def to_mapinfo(projstring):
+    """Returns projection parameters as MapInfo CoordSys definition"""
+    if not osr:
+        raise ImportError('Package osgeo not found')
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(to_str(projstring))
+    return srs.ExportToMICoordSys()
 
 
 def generate_output(outfile, result_projstring, options, points, residuals):
@@ -320,6 +329,8 @@ def generate_output(outfile, result_projstring, options, points, residuals):
     elif '--esri' in options:
         outfile.write(
             to_wkt(result_projstring, esri=True, pretty='--pretty' in options))
+    elif '--mapinfo' in options:
+        outfile.write(to_mapinfo(result_projstring))
     else:
         outfile.write(result_projstring)
         outfile.write('\n')
