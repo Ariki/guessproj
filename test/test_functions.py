@@ -19,12 +19,36 @@ class TestFunctions(unittest.TestCase):
         """Setup test case"""
 
     def test_to_str(self):
-        """Test to_str() function"""
+        """to_str() function converts byte or Unicode string to str type"""
         self.assertIsNone(guessproj.to_str(None))
-        self.assertTrue(isinstance(guessproj.to_str(b'+lon_0=39.0'), str))
-        self.assertTrue(isinstance(guessproj.to_str(u'+lon_0=39.0'), str))
+        self.assertIsInstance(guessproj.to_str(b'+lon_0=39.0'), str)
+        self.assertIsInstance(guessproj.to_str(u'+lon_0=39.0'), str)
+        self.assertIsInstance(
+            guessproj.to_str(b'\xef', encoding='cp1251'), str)
+        self.assertIsInstance(
+            guessproj.to_str(u'\u043f', encoding='cp1251'), str)
+        self.assertEqual(
+            guessproj.to_str(u'\u043f', encoding='cp1251'),
+            guessproj.to_str(b'\xef', encoding='cp1251')
+            )
         self.assertRaises(ValueError, lambda: guessproj.to_str(True))
-
+        
+    def test_to_unicode(self):
+        """to_unicode() function converts byte or Unicode string to Unicode"""
+        utype = type(u'a')
+        self.assertIsNone(guessproj.to_unicode(None))
+        self.assertIsInstance(guessproj.to_unicode(b'+lon_0=39.0'), utype)
+        self.assertIsInstance(guessproj.to_unicode(u'+lon_0=39.0'), utype)
+        self.assertIsInstance(
+            guessproj.to_unicode(b'\xef', encoding='cp1251'), utype)
+        self.assertIsInstance(
+            guessproj.to_unicode(u'\u043f', encoding='cp1251'), utype)
+        self.assertEqual(
+            guessproj.to_unicode(u'\u043f', encoding='cp1251'),
+            guessproj.to_unicode(b'\xef', encoding='cp1251')
+            )
+        self.assertRaises(ValueError, lambda: guessproj.to_unicode(True))
+        
     def test_parse_coord(self):
         """Test parse_coord() function"""
         self.assertEqual(guessproj.parse_coord(u'12.15'), 12.15)
