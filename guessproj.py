@@ -23,20 +23,37 @@ try:
 except:
     osr = False
 
+# Python version compatibility
 PY3 = sys.version_info[0] >= 3
+if PY3:
+    unicode = str
 
 
-def to_str(s):
-    """Converts byte or unicode string to bytes type assuming UTF-8 encoding"""
+def to_str(s, encoding='utf-8'):
+    """Converts raw bytes or Unicode string to str type
+    (which is Unicode string in Python 3 and raw bytes in Python 2)
+    """
     if s is None:
         return None
     if isinstance(s, str):
         return s
     if PY3 and isinstance(s, bytes):
-        return s.decode('utf-8')
-    elif not PY3 and isinstance(s, unicode):
-        return s.encode('utf-8')
+        return s.decode(encoding)
+    if not PY3 and isinstance(s, unicode):
+        return s.encode(encoding)
     raise ValueError('Cannot convert {0} to str'.format(s))
+
+
+def to_unicode(s, encoding='utf-8'):
+    """Converts raw bytes or Unicode string to Unicode"""
+    if s is None:
+        return None
+    # For Python 3, unicode is defined above as an alias for str
+    if isinstance(s, unicode):
+        return s
+    if isinstance(s, bytes):
+        return s.decode(encoding)
+    raise ValueError('Cannot convert {0} to Unicode'.format(s))
 
 
 def refine_projstring(projstring):
@@ -165,6 +182,7 @@ def parse_arguments(argv):
     filename = None
     parsing_target = False
     for arg in argv[1:]:
+        arg = to_unicode(arg, sys.getfilesystemencoding())
         if arg.startswith('-'):
             splitarg = arg.split('=', 1)
             if len(splitarg) == 2:
@@ -363,7 +381,12 @@ def arg_main(argv, outfile):
 
 def main():
     """The script entry point used in setup.py"""
-    return arg_main(sys.argv, sys.stdout)
+    try:
+        return arg_main(sys.argv, sys.stdout)
+    except Exception as ex:
+        sys.stderr.write(str(ex))
+        sys.stderr.write('\n')
+        return 1
 
 
 if __name__ == '__main__':
