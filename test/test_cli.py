@@ -29,7 +29,7 @@ class TestFourPoints(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertFalse(err)
         self.assertIn('Usage', output.decode('utf-8'))
-
+        
     def test_proj(self):
         """Tests projstring output"""
         cmd = ('python "{0}" --proj +to +proj=tmerc +ellps=krass '
@@ -50,7 +50,7 @@ class TestFourPoints(unittest.TestCase):
         self.assertAlmostEqual(float(params['+lon_0']), 39, places=8)
         self.assertAlmostEqual(float(params['+x_0']), 3e5, places=2)
         self.assertAlmostEqual(float(params['+y_0']), -5e6, places=2)
-
+        
     def test_default(self):
         """Tests default output"""
         cmd = ('python "{0}" +to +proj=tmerc +ellps=krass '
