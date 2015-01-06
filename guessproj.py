@@ -55,7 +55,6 @@ def refine_projstring(projstring):
     srs = osr.SpatialReference()
     srs.ImportFromProj4(to_str(projstring))
     return srs.ExportToProj4()
-    return projstring
     
 
 def find_residuals(src_proj, tgt_proj, points):
