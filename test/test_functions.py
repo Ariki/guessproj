@@ -50,7 +50,7 @@ class TestFunctions(unittest.TestCase):
         self.assertRaises(ValueError, lambda: guessproj.to_unicode(True))
         
     def test_parse_coord(self):
-        """Test parse_coord() function"""
+        """parse_coord() parses coordinate value"""
         self.assertEqual(guessproj.parse_coord(u'12.15'), 12.15)
         self.assertEqual(guessproj.parse_coord(b'12.15'), 12.15)
         self.assertEqual(guessproj.parse_coord(u'-13'), -13)
@@ -80,7 +80,6 @@ class TestFunctions(unittest.TestCase):
 
     def test_read_points(self):
         """read_points() function reads points data from a text file"""
-        # TODO: Implement test that covers all features
         filename = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             'four_points.txt'
@@ -182,6 +181,39 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(len(residuals), 8)
         for r in residuals:
             self.assertLess(abs(r), 0.01)
+    
+    @unittest.skip('Not completed yet, not robust')
+    def test_find_params(self):
+        """test_find_params() finds projection parameters"""
+        src_proj = '+proj=longlat +ellps=WGS84 +no_defs'
+        tgt_params = {
+            '+proj': ['lcc'],
+            '+ellps': ['sphere'],
+            '+lat_0': ['0'],
+            '+lat_1': ['40'],
+            '+lat_2': ['56'],
+            '+lon_0': [10],
+            '--k_0': [0.0005],
+            '--x_0': [0],
+            '--y_0': [0],
+            '+no_defs': [],
+            }
+        points = [
+            [(-20, 70), (174, -85), 'w20n70'],
+            [(0, 70), (401, -146), 'e0n70'],
+            [(40, 70), (861, -76.5), 'e40n70'],
+            [(-20, 60), (45, -393.5), 'w20e60'],
+            [(0, 60), (359, -478), 'e0n60'],
+            [(40, 60), (998, -382), 'e40n60'],
+            [(-10, 50), (115, -760.5), 'w10n50'],
+            [(10, 50), (525.5, -812), 'e10n50'],
+            [(30, 50), (935, -750), 'e30n50'],
+            [(-10, 40), (31.5, -1076.5), 'w10n40'],
+            [(0, 40), (278, -1124.5), 'e0n40'],
+            [(20, 40), (780.5, -1118.5), 'e20n40'],
+            ]
+        result_projstring, modifiers, residuals = guessproj.find_params(
+            src_proj, tgt_params, points)
 
 
 if __name__ == '__main__':

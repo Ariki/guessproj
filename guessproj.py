@@ -125,7 +125,7 @@ def find_params(src_proj, tgt_params, points):
     for name, value in tgt_params.items():
         if not name.startswith('+'):
             modifiers[name] = float(value[0])
-            if isinstance(value[0], float):
+            if isinstance(value[0], (float, int, long)):
                 unknown_modifiers.append(name)
                 initial_values.append(value[0])
     
