@@ -21,6 +21,9 @@ PY3 = sys.version_info[0] >= 3
 if PY3:
     unicode = str
     long = int
+    
+# Enable exceptions in osgeo.osr
+osr.UseExceptions()
 
 
 def to_str(s, encoding='utf-8'):
