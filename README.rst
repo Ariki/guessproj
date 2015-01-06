@@ -21,14 +21,14 @@ Installation
 ------------
 
 The best way to install ``guessproj`` is using
-`pip <https://pip.pypa.io/en/latest/quickstart.html>`_::
+`pip`_::
 
     pip install guessproj
     
 Be aware that ``guessproj`` has some binary dependencies that you need
 to install before trying to install ``guessproj``.
-The main dependency is `GDAL`_. If you are a GIS specialist
-you probably already have this library in your system.
+The main dependencies are `GDAL`_ and `PROJ.4`_. If you are a GIS specialist
+you probably already have these libraries in your system.
 You also need `GDAL Python bindings`_
 as well as `NumPy`_ and `SciPy`_ packages.
 The ``pip`` tool will try to install these packages automatically
@@ -163,9 +163,10 @@ In Python 2.6, you should install unittest2 package and use::
     PYTHONPATH=. unit2 discover test
 
 
+.. _pip: https://pip.pypa.io/en/latest/quickstart.html
 .. _GDAL: http://www.gdal.org/
+.. _PROJ.4: https://trac.osgeo.org/proj/
 .. _GDAL Python bindings: https://pypi.python.org/pypi/GDAL/
-.. _pyproj: https://pypi.python.org/pypi/pyproj/
 .. _NumPy: https://pypi.python.org/pypi/numpy/
 .. _SciPy: https://pypi.python.org/pypi/scipy/
 .. _setuptools: https://pypi.python.org/pypi/setuptools/
