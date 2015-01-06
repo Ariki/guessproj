@@ -169,7 +169,11 @@ class TestFunctions(unittest.TestCase):
         filename = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'four_points.txt')
         points = guessproj.read_points(filename, 'cp1251')
-        residuals = guessproj.find_residuals(src_proj, tgt_proj, points)
+        residuals = guessproj.find_residuals(
+            src_proj,
+            tgt_proj,
+            { '--k_0': 1.0, '--x_0': 0.0, '--y_0': 0.0, '--z_0': 0.0, },
+            points)
         self.assertEqual(len(residuals), 4)
         for p in residuals:
             self.assertEqual(len(p), 2)

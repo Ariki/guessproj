@@ -60,7 +60,7 @@ def refine_projstring(projstring):
     return srs.ExportToProj4()
     
 
-def find_residuals(src_proj, tgt_proj, points):
+def find_residuals(src_proj, tgt_proj, modifiers, points):
     """Transforms the points and calculates the residuals"""
     src_srs = osr.SpatialReference()
     src_srs.ImportFromProj4(to_str(src_proj))
@@ -69,9 +69,13 @@ def find_residuals(src_proj, tgt_proj, points):
     transform = osr.CoordinateTransformation(src_srs, tgt_srs)
     residuals = []
     for pt in points:
+        r = []
         tpt = transform.TransformPoint(*pt[0])
-        pt_residuals = [pt[1][i] - tpt[i] for i in range(len(pt[1]))]
-        residuals.append(pt_residuals)
+        r.append(pt[1][0] - (tpt[0] * modifiers['--k_0'] + modifiers['--x_0']))
+        r.append(pt[1][1] - (tpt[1] * modifiers['--k_0'] + modifiers['--y_0']))
+        if len(pt[0]) == 3 and len(pt[1]) == 3:
+            r.append(pt[0][2] - (tpt[2] + modifiers['--z_0']))
+        residuals.append(r)
     return residuals
     
 
@@ -139,7 +143,8 @@ def find_params(src_proj, tgt_params, points):
     if not initial_values:
         return (
             refine_projstring(tgt_template),
-            find_residuals(src_proj, tgt_template, points)
+            modifiers,
+            find_residuals(src_proj, tgt_template, modifiers, points)
             )
     # Solving the problem
     x, cov_x, infodict, mesg, ier = leastsq(
