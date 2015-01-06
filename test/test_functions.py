@@ -98,6 +98,21 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(pair2[1], 207338.73, places=3)
         self.assertEqual(name, 'pt1')
         
+    def test_read_points_from_iterable(self):
+        data = [
+            '''# Point list''',
+            ''' 39d30'00" 56d07'30" 50.6  20000.0 35000.5 52 \u043f_1''',
+            b'''40,17d    56d07,5'  60,6 100000,0 35000,5 62 \xd0\xbf_2''',
+            ]
+        points = guessproj.read_points_from_iterable(data)
+        self.assertEqual(len(points), 2)
+        self.assertEqual(points[0][0], (39.5, 56.125, 50.6))
+        self.assertEqual(points[0][1], (20000.0, 35000.5, 52.0))
+        self.assertEqual(points[0][2], '\u043f_1')
+        self.assertEqual(points[1][0], (40.17, 56.125, 60.6))
+        self.assertEqual(points[1][1], (100000.0, 35000.5, 62.0))
+        self.assertEqual(points[1][2], '\u043f_2')
+        
     def test_refine_projstring(self):
         """refine_projstring(projstring) returns normalized projstring"""
         test_data = [
