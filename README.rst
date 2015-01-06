@@ -1,5 +1,5 @@
-guessproj:  Guessing parameters of cartographic projection
-==========================================================
+guessproj:  Adjusting parameters of cartographic projections
+============================================================
 
 ``guessproj`` is a Python script that calculates unknown parameters
 of cartographic projection or coordinate system from coordinates
@@ -7,7 +7,7 @@ of identical points in some known coordinate system and in unknown one.
 You should know projection type, though.
 The script can also determine parameters of transformation between two datums.
 
-The script uses ``pyproj`` and ``scipy`` internally.
+The script uses ``GDAL`` and ``scipy`` internally.
 The method of least squares is used, so the more points you have,
 the better accuracy will be achieved.
 
@@ -27,15 +27,12 @@ The best way to install ``guessproj`` is using
     
 Be aware that ``guessproj`` has some binary dependencies that you need
 to install before trying to install ``guessproj``.
-These are `GDAL`_ and `PROJ.4`_.
-If you are a GIS specialist you probably already have these libraries.
-You also need Python bindings for them (`GDAL bindings`_ and `pyproj`_)
+The main dependency is `GDAL`_. If you are a GIS specialist
+you probably already have this library in your system.
+You also need `GDAL Python bindings`_
 as well as `NumPy`_ and `SciPy`_ packages.
 The ``pip`` tool will try to install these packages automatically
 but on most systems you'll need to install them in a platform-specific way.
-
-Note that GDAL is an optional dependency but may become required in future
-versions of ``guessproj``.
 
 Instead of using ``pip``, you can download the source archive,
 unpack it and run ::
@@ -90,10 +87,11 @@ Exact parameters of various coordinate systems you can find
 in `PROJ.4 documentation`_.
 
 The unknown parameters are specified among all others in the projstring,
-the only difference is using ``~`` symbol instead of ``=``. The numeric value
-that follows the ``~`` symbol is an initial approximation of the parameter value.
-For ``+towgs84`` parameter, you can specify ``~`` before any (or all) of comma-separated
-values. The combination ``=~`` is the same as ``~``.
+the only difference is using ``~`` symbol before the value. The numeric value
+that follows the ``~`` symbol is an initial approximation
+of the parameter value. For ``+towgs84`` parameter, you can specify ``~``
+before any (or all) of comma-separated values. You can use ``~``
+instead of ``=~``.
 
 Example::
 
@@ -105,8 +103,8 @@ All that goes before ``+to`` argument is a projstring for the known system
 (if omitted, WGS84 longitude/latitude is used by default). All the rest
 parameters starting with ``+`` are the projstring for the unknown system,
 where initial approximations of the unknown parameters are marked with ``~``.
-In this example, parameters ``+lon_0`` and ``+y_0`` are unknown. The last argument
-is a name of input text file containing point coordinates.
+In this example, parameters ``+lon_0`` and ``+y_0`` are unknown.
+The last argument is a name of input text file containing point coordinates.
 
 The script can evaluate numeric parameters only, so you should specify
 at least ``+proj`` and ``+ellps``. It's worth mentioning, also, that some
@@ -121,7 +119,7 @@ and calculate residual errors for each coordinate value.
 Options
 -------
 
-Any additional program options (which are not part of projstring syntax)
+Any additional program options (which are not part of ``PROJ.4`` syntax)
 start with ``-`` or ``--``.
 
 Option ``-h`` or ``--help`` prints a short command line reference and exits
@@ -133,30 +131,25 @@ Option ``--encoding=ENCODING_NAME`` specifies the encoding of input file
 Option ``--proj`` or ``--proj4`` forces output of resulting projstring only,
 suppressing table of residual errors.
 
-Option ``--wkt`` forces output of projection parameters in OGC WKT format
-(GDAL Python bindings required).
+Option ``--wkt`` forces output of projection parameters in OGC WKT format.
 
 Option ``--esri`` forces output of projection parameters in Esri WKT format
-(experimental, GDAL Python bindings required).
+(experimental, you'll probably want to edit the result).
 
 Option ``--pretty`` forces pretty WKT formatting when used with ``--wkt``
 or ``--esri``.
 
 Option ``--mapinfo`` forces output of projection parameters in MapInfo CoordSys
-format (experimental, GDAL Python bindings required). Be aware that current
-GDAL based implementation does not handle datum and ellipsoid parameters
-correctly.
+format (experimental). Be aware that current GDAL based implementation
+does not handle datum and ellipsoid parameters properly.
 
 Output
 ------
 
-The default output of the program is a projstring in which approximated values
+The default output of the program is a projstring in which approximate values
 of parameters are replaced with the exact values found by the script,
 and a list of residual errors for each point. Other forms of output
 can be specified using program options.
-
-If GDAL bindings are installed, the projstring will be formatted
-so as to be represented in a normalized form.
 
 Testing
 -------
@@ -168,13 +161,10 @@ To run unit tests with Python 2.7 or 3.3+, execute in source directory::
 In Python 2.6, you should install unittest2 package and use::
 
     PYTHONPATH=. unit2 discover test
-    
-You can also run scripts from ``test/`` directory directly.
 
 
 .. _GDAL: http://www.gdal.org/
-.. _PROJ.4: http://trac.osgeo.org/proj/
-.. _GDAL bindings: https://pypi.python.org/pypi/GDAL/
+.. _GDAL Python bindings: https://pypi.python.org/pypi/GDAL/
 .. _pyproj: https://pypi.python.org/pypi/pyproj/
 .. _NumPy: https://pypi.python.org/pypi/numpy/
 .. _SciPy: https://pypi.python.org/pypi/scipy/
