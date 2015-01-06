@@ -161,7 +161,8 @@ def parse_arguments(argv):
     input_file = None
     src_parsing_mode = True
     for arg in argv[1:]:
-        if hasattr(arg, 'read'): # Can accept file object instead of filename
+        if hasattr(arg, '__iter__') and not isinstance(arg, (bytes, unicode)):
+            # Can accept iterable object instead of filename
             if input_file:
                 raise ValueError('Multiple input files are not supported')
             input_file = arg
@@ -246,41 +247,48 @@ def parse_coord(s):
     return f
 
 
-def read_points(filename, encoding='utf-8'):
-    """Reads points from a file"""
-    # TODO: Allow file object for the first argument
+def read_points_from_iterable(fp):
+    """Reads points from an iterable of strings"""
     points = []
-    with codecs.open(filename, 'r', encoding) as fp:
-        for line in fp:
-            tokens = line.strip().split()
-            if not tokens or not tokens[0] or tokens[0].startswith('#'):
-                continue
-            number_count = len(tokens)
-            for i, t in enumerate(tokens):
-                try:
-                    d = parse_coord(t)
-                except:
-                    number_count = i
-                    break
-            number_count = min((number_count, 6))
-            if number_count == 5:
-                number_count = 4
-            if number_count < 4:
-                raise ValueError('')
-            tokens = line.strip().split(None, number_count)
-            if number_count == 4:
-                points.append((
-                    tuple(map(parse_coord, tokens[0:2])),
-                    tuple(map(parse_coord, tokens[2:4])),
-                    tokens[4] if len(tokens) > 4 else '',
-                    ))
-            elif number_count == 6:
-                points.append((
-                    tuple(map(parse_coord, tokens[0:3])),
-                    tuple(map(parse_coord, tokens[3:6])),
-                    tokens[6] if len(tokens) > 6 else '',
-                    ))
+    for line in fp:
+        u_line = to_unicode(line, 'utf-8')
+        tokens = u_line.strip().split()
+        if not tokens or not tokens[0] or tokens[0].startswith('#'):
+            continue
+        number_count = len(tokens)
+        for i, t in enumerate(tokens):
+            try:
+                d = parse_coord(t)
+            except:
+                number_count = i
+                break
+        number_count = min((number_count, 6))
+        if number_count == 5:
+            number_count = 4
+        if number_count < 4:
+            raise ValueError('')
+        tokens = u_line.strip().split(None, number_count)
+        if number_count == 4:
+            points.append((
+                tuple(map(parse_coord, tokens[0:2])),
+                tuple(map(parse_coord, tokens[2:4])),
+                tokens[4] if len(tokens) > 4 else '',
+                ))
+        elif number_count == 6:
+            points.append((
+                tuple(map(parse_coord, tokens[0:3])),
+                tuple(map(parse_coord, tokens[3:6])),
+                tokens[6] if len(tokens) > 6 else '',
+                ))
     return points
+    
+
+def read_points(textfile, encoding='utf-8'):
+    """Reads points from a file"""
+    if isinstance(textfile, (bytes, unicode)):
+        with codecs.open(textfile, 'r', encoding) as fp:
+            return read_points_from_iterable(fp)
+    return read_points_from_iterable(textfile)
 
 
 def usage_help(program_name):
