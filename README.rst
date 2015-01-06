@@ -143,6 +143,31 @@ Option ``--mapinfo`` forces output of projection parameters in MapInfo CoordSys
 format (experimental). Be aware that current GDAL based implementation
 does not handle datum and ellipsoid parameters properly.
 
+Extra transformation options
+----------------------------
+
+Sometimes the coordinates you have are taken from a map of unknown scale,
+and you even don't know where the coordinate system origin is. For example,
+you can pick pixel coordinates of geographic grid from a scanned map.
+Some projections supported by ``PROJ.4`` have parameters such as ``+k_0``,
+``+x_0`` and ``+y_0`` which are scale, false easting and false northing.
+You can tell ``guessproj`` to treat them as unknown values to find.
+But most projections don't support these parameters.
+
+In that case, you can use extra options provided by ``guessproj`` which
+define an extra transformation applied to projected coordinates. These options
+are ``--k_0``, ``--x_0``, ``--y_0``, and ``--z_0``. Each of them can be set
+to a known value using ``=`` symbol, or to an initial value for approximation
+using ``~`` symbol, just like normal ``PROJ.4`` parameters. Don't use them
+together with corresponding ``PROJ.4`` options because they have
+the same effect. Their values are not included in resulting projstring
+but are displayed in default ``guessproj`` output.
+
+The scaling factor ``--k_0`` is applied to ``x`` and ``y`` coordinates,
+its default value is 1. False origin components ``--x_0``, ``--y_0``,
+and ``--z_0`` are applied to corresponding coordinates (after scaling),
+their default value is 0.
+
 Output
 ------
 
