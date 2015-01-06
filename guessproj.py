@@ -104,6 +104,15 @@ def find_params(src_proj, tgt_params, points):
     src_srs.ImportFromProj4(to_str(src_proj))
     tgt_template, initial_values = prepare_template(tgt_params)
     proj_param_count = len(initial_values)
+    # Modifiers are numeric parameters that are not part of Proj4 syntax
+    modifiers = { '--k_0': 1.0, '--x_0': 0.0, '--y_0': 0.0, '--z_0': 0.0, }
+    unknown_modifiers = []
+    for name, value in tgt_params.items():
+        if not name.startswith('+'):
+            modifiers[name] = float(value[0])
+            if isinstance(value[0], float):
+                unknown_modifiers.append(name)
+                initial_values.append(value[0])
     
     def target(xs):
         """Target function"""
@@ -111,13 +120,16 @@ def find_params(src_proj, tgt_params, points):
         tgt_srs = osr.SpatialReference()
         tgt_srs.ImportFromProj4(to_str(tgt_proj))
         transform = osr.CoordinateTransformation(src_srs, tgt_srs)
+        m = modifiers.copy()
+        for i, mod_name in enumerate(unknown_modifiers):
+            m[mod_name] = xs[proj_param_count + i]
         result = []
         for pt in points:
             tpt = transform.TransformPoint(*pt[0])
-            result.append(pt[1][0] - tpt[0])
-            result.append(pt[1][1] - tpt[1])
+            result.append(pt[1][0] - (tpt[0] * m['--k_0'] + m['--x_0']))
+            result.append(pt[1][1] - (tpt[1] * m['--k_0'] + m['--y_0']))
             if len(pt[0]) == 3 and len(pt[1]) == 3:
-                result.append(pt[0][2] - tpt[2])
+                result.append(pt[0][2] - (tpt[2] + m['--z_0']))
         return result
     
     # If all parameters are known, calculate the residuals
@@ -143,7 +155,9 @@ def find_params(src_proj, tgt_params, points):
         else:
             residuals.append(tuple(fvec[i:i + 2]))
             i += 2
-    return result_projstring, residuals
+    for j, mod_name in enumerate(unknown_modifiers):
+        modifiers[mod_name] = x[proj_param_count + j]
+    return result_projstring, modifiers, residuals
 
 
 def parse_arguments(argv):
@@ -308,6 +322,13 @@ def format_residuals(points, residuals):
     return s
 
 
+def format_extra_params(modifiers):
+    """Returns extra parameters as a text string"""
+    items = list(modifiers.items())
+    items.sort()
+    return 'Extra transform: ' + ', '.join('{0}: {1}'.format(*i) for i in items)
+
+
 def to_wkt(projstring, esri=False, pretty=False):
     """Returns projection parameters as well-known text"""
     srs = osr.SpatialReference()
@@ -324,7 +345,8 @@ def to_mapinfo(projstring):
     return srs.ExportToMICoordSys()
 
 
-def generate_output(outfile, result_projstring, options, points, residuals):
+def generate_output(
+        outfile, result_projstring, extra_params, options, points, residuals):
     """Outputs results in specified format"""
     if '--proj' in options or '--proj4' in options:
         outfile.write(result_projstring)
@@ -337,6 +359,8 @@ def generate_output(outfile, result_projstring, options, points, residuals):
         outfile.write(to_mapinfo(result_projstring))
     else:
         outfile.write(result_projstring)
+        outfile.write('\n')
+        outfile.write(format_extra_params(extra_params))
         outfile.write('\n')
         outfile.write(format_residuals(points, residuals))
     outfile.write('\n')
@@ -353,10 +377,11 @@ def arg_main(argv, outfile):
         return 0
     encoding = options.get('--encoding', 'utf-8')
     points = read_points(input_file, encoding)
-    result_projstring, residuals = find_params(
+    result_projstring, extra_params, residuals = find_params(
         src_proj, tgt_params, points)
     if result_projstring:
-        generate_output(outfile, result_projstring, options, points, residuals)
+        generate_output(outfile, result_projstring, extra_params,
+                        options, points, residuals)
         return 0
     else:
         if not(set(options.keys()) &
