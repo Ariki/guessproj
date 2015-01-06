@@ -60,23 +60,31 @@ def refine_projstring(projstring):
     return srs.ExportToProj4()
     
 
-def find_residuals(src_proj, tgt_proj, modifiers, points):
+def calc_residuals(src_srs, tgt_srs, modifiers, points):
     """Transforms the points and calculates the residuals"""
-    src_srs = osr.SpatialReference()
-    src_srs.ImportFromProj4(to_str(src_proj))
-    tgt_srs = osr.SpatialReference()
-    tgt_srs.ImportFromProj4(to_str(tgt_proj))
     transform = osr.CoordinateTransformation(src_srs, tgt_srs)
-    residuals = []
+    r = []
     for pt in points:
-        r = []
         tpt = transform.TransformPoint(*pt[0])
         r.append(pt[1][0] - (tpt[0] * modifiers['--k_0'] + modifiers['--x_0']))
         r.append(pt[1][1] - (tpt[1] * modifiers['--k_0'] + modifiers['--y_0']))
         if len(pt[0]) == 3 and len(pt[1]) == 3:
             r.append(pt[0][2] - (tpt[2] + modifiers['--z_0']))
-        residuals.append(r)
-    return residuals
+    return r
+
+
+def group_residuals(values, points):
+    """Groups residuals basing on points list and returns a list of tuples"""
+    result = []
+    i = 0
+    for pt in points:
+        if len(pt[0]) == 3 and len(pt[1]) == 3:
+            result.append(tuple(values[i:i + 3]))
+            i += 3
+        else:
+            result.append(tuple(values[i:i + 2]))
+            i += 2
+    return result
     
 
 def prepare_template(tgt_params):
@@ -104,7 +112,7 @@ def prepare_template(tgt_params):
 
 
 def find_params(src_proj, tgt_params, points):
-    """Finds unknown params of target projection
+    """Finds unknown parameters of target projection
     using least squares method
     """
     src_srs = osr.SpatialReference()
@@ -126,25 +134,20 @@ def find_params(src_proj, tgt_params, points):
         tgt_proj = tgt_template.format(*xs[:proj_param_count])
         tgt_srs = osr.SpatialReference()
         tgt_srs.ImportFromProj4(to_str(tgt_proj))
-        transform = osr.CoordinateTransformation(src_srs, tgt_srs)
         m = modifiers.copy()
         for i, mod_name in enumerate(unknown_modifiers):
             m[mod_name] = xs[proj_param_count + i]
-        result = []
-        for pt in points:
-            tpt = transform.TransformPoint(*pt[0])
-            result.append(pt[1][0] - (tpt[0] * m['--k_0'] + m['--x_0']))
-            result.append(pt[1][1] - (tpt[1] * m['--k_0'] + m['--y_0']))
-            if len(pt[0]) == 3 and len(pt[1]) == 3:
-                result.append(pt[0][2] - (tpt[2] + m['--z_0']))
-        return result
+        return calc_residuals(src_srs, tgt_srs, m, points)
     
     # If all parameters are known, calculate the residuals
     if not initial_values:
+        tgt_srs = tgt_srs = osr.SpatialReference()
+        tgt_srs.ImportFromProj4(to_str(tgt_template))
+        residuals = calc_residuals(src_srs, tgt_srs, modifiers, points)
         return (
             refine_projstring(tgt_template),
             modifiers,
-            find_residuals(src_proj, tgt_template, modifiers, points)
+            group_residuals(residuals, points)
             )
     # Solving the problem
     x, cov_x, infodict, mesg, ier = leastsq(
@@ -154,17 +157,9 @@ def find_params(src_proj, tgt_params, points):
         return None, None, None
     result_projstring = refine_projstring(tgt_template.format(*x))
     fvec = infodict['fvec']
-    residuals = []
-    i = 0
-    for pt in points:
-        if len(pt[0]) == 3 and len(pt[1]) == 3:
-            residuals.append(tuple(fvec[i:i + 3]))
-            i += 3
-        else:
-            residuals.append(tuple(fvec[i:i + 2]))
-            i += 2
-    for j, mod_name in enumerate(unknown_modifiers):
-        modifiers[mod_name] = x[proj_param_count + j]
+    residuals = group_residuals(fvec, points)
+    for i, mod_name in enumerate(unknown_modifiers):
+        modifiers[mod_name] = x[proj_param_count + i]
     return result_projstring, modifiers, residuals
 
 

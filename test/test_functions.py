@@ -162,23 +162,26 @@ class TestFunctions(unittest.TestCase):
         self.assertNotIn('--y_0', template)
         self.assertEqual(len(initial_values), 2)
     
-    def test_find_residuals(self):
-        """find_residuals() transforms the points and calculates residuals"""
+    def test_calc_residuals(self):
+        """calc_residuals() transforms the points and calculates residuals"""
         src_proj = '+proj=longlat +ellps=WGS84 +no_defs'
+        src_srs = guessproj.osr.SpatialReference()
+        src_srs.ImportFromProj4(guessproj.to_str(src_proj))
         tgt_proj = '+proj=tmerc +ellps=krass +lon_0=39 +x_0=3e5 +y_0=-5e6'
+        tgt_srs = guessproj.osr.SpatialReference()
+        tgt_srs.ImportFromProj4(guessproj.to_str(tgt_proj))
         filename = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'four_points.txt')
         points = guessproj.read_points(filename, 'cp1251')
-        residuals = guessproj.find_residuals(
-            src_proj,
-            tgt_proj,
+        residuals = guessproj.calc_residuals(
+            src_srs,
+            tgt_srs,
             { '--k_0': 1.0, '--x_0': 0.0, '--y_0': 0.0, '--z_0': 0.0, },
-            points)
-        self.assertEqual(len(residuals), 4)
-        for p in residuals:
-            self.assertEqual(len(p), 2)
-            for r in p:
-                self.assertLess(abs(r), 0.01)
+            points
+            )
+        self.assertEqual(len(residuals), 8)
+        for r in residuals:
+            self.assertLess(abs(r), 0.01)
 
 
 if __name__ == '__main__':
