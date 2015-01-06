@@ -155,7 +155,7 @@ def parse_arguments(argv):
     which may be strings(known parameters) or floats (unknown ones).
     """
     tgt_option_re = re.compile(r'^(--[kxyz]_0)(=|~|=~)(.*)$')
-    param_re = re.compile(r'^(\+[0-9a-zA-Z_]+)=?(.*)?$')
+    param_re = re.compile(r'^(\+[0-9a-zA-Z_]+)=?(.*)$')
     src_params = []
     options, tgt_params = {}, {}
     input_file = None
