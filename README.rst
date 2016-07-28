@@ -99,7 +99,7 @@ Example::
 
     guessproj +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +to \
       +proj=tmerc +ellps=krass +lat_0=0 +lon_0~44 +x_0=300000 +y_0~-4.7e6 \
-      +towgs84=23.57,-140.95,-79.8,0,-0.35,-0.79,-0.22 points.txt
+      +towgs84=23.57,-140.95,-79.8,0,0.35,0.79,-0.22 points.txt
 
 All that goes before ``+to`` argument is a projstring for the known system
 (if omitted, WGS84 longitude/latitude is used by default). All the rest
