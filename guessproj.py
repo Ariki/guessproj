@@ -10,7 +10,6 @@ __version__ = '0.05'
 __license__ = 'MIT'
 
 import codecs
-import os
 import re
 import sys
 from osgeo import osr
@@ -21,7 +20,7 @@ PY3 = sys.version_info[0] >= 3
 if PY3:
     unicode = str
     long = int
-    
+
 # Enable exceptions in osgeo.osr
 osr.UseExceptions()
 
@@ -58,7 +57,7 @@ def refine_projstring(projstring):
     srs = osr.SpatialReference()
     srs.ImportFromProj4(to_str(projstring))
     return srs.ExportToProj4()
-    
+
 
 def calc_residuals(src_srs, tgt_srs, modifiers, points):
     """Transforms the points and calculates the residuals"""
@@ -85,7 +84,7 @@ def group_residuals(values, points):
             result.append(tuple(values[i:i + 2]))
             i += 2
     return result
-    
+
 
 def prepare_template(tgt_params):
     """Creates target projstring template and list of initial values"""
@@ -120,7 +119,12 @@ def find_params(src_proj, tgt_params, points):
     tgt_template, initial_values = prepare_template(tgt_params)
     proj_param_count = len(initial_values)
     # Modifiers are numeric parameters that are not part of Proj4 syntax
-    modifiers = { '--k_0': 1.0, '--x_0': 0.0, '--y_0': 0.0, '--z_0': 0.0, }
+    modifiers = {
+        '--k_0': 1.0,
+        '--x_0': 0.0,
+        '--y_0': 0.0,
+        '--z_0': 0.0,
+    }
     unknown_modifiers = []
     for name, value in tgt_params.items():
         if not name.startswith('+'):
@@ -128,7 +132,7 @@ def find_params(src_proj, tgt_params, points):
             if isinstance(value[0], (float, int, long)):
                 unknown_modifiers.append(name)
                 initial_values.append(value[0])
-    
+
     def target(xs):
         """Target function"""
         tgt_proj = tgt_template.format(*xs[:proj_param_count])
@@ -138,7 +142,7 @@ def find_params(src_proj, tgt_params, points):
         for i, mod_name in enumerate(unknown_modifiers):
             m[mod_name] = xs[proj_param_count + i]
         return calc_residuals(src_srs, tgt_srs, m, points)
-    
+
     # If all parameters are known, calculate the residuals
     if not initial_values:
         tgt_srs = tgt_srs = osr.SpatialReference()
@@ -148,7 +152,7 @@ def find_params(src_proj, tgt_params, points):
             refine_projstring(tgt_template),
             modifiers,
             group_residuals(residuals, points)
-            )
+        )
     # Solving the problem
     x, cov_x, infodict, mesg, ier = leastsq(
         target, initial_values, ftol=1e-12, full_output=True)
@@ -164,7 +168,8 @@ def find_params(src_proj, tgt_params, points):
 
 
 def parse_arguments(argv):
-    """Parses command line arguments of the program
+    """
+    Parses command line arguments of the program
     and returns source projection Proj4 string,
     dict of target projection parameters, and input filename (or file object).
     Each parameter is represented as a list of subparameters
@@ -186,25 +191,25 @@ def parse_arguments(argv):
         arg = to_unicode(arg, sys.getfilesystemencoding())
         if arg.startswith('-'):
             m = tgt_option_re.match(arg)
-            if m: # The option changes target function behavior
+            if m:  # The option changes target function behavior
                 pname, delimiter, pvalue = m.groups()
                 pknown = delimiter == '='
                 tgt_params[pname] = [pvalue] if pknown else [float(pvalue)]
-            else: # The option doesn't changes target function behavior
+            else:  # The option doesn't changes target function behavior
                 splitarg = arg.split('=', 1)
                 if len(splitarg) == 2:
                     options[splitarg[0]] = splitarg[1]
                 else:
                     options[arg] = True
         elif src_parsing_mode:
-            if arg == '+to': # End of source projection parameters
+            if arg == '+to':  # End of source projection parameters
                 src_parsing_mode = False
-            elif arg.startswith('+'): # Source projection parameter
+            elif arg.startswith('+'):  # Source projection parameter
                 src_params.append(arg)
             else:
                 raise ValueError('Unexpected token: {0}'.format(arg))
-        else: # Target projection parameters
-            if arg.startswith('+'): # Target projection parameter
+        else:  # Target projection parameters
+            if arg.startswith('+'):  # Target projection parameter
                 m = param_re.match(arg)
                 if not m:
                     raise ValueError('Invalid parameter: {0}'.format(arg))
@@ -213,10 +218,11 @@ def parse_arguments(argv):
                     subvalues = pvalue.split(',')
                     tgt_params[pname] = [
                         float(v[1:]) if v.startswith('~') else v
-                        for v in subvalues]
+                        for v in subvalues
+                    ]
                 else:
                     tgt_params[pname] = []
-            else: # File name
+            else:  # File name
                 if input_file:
                     raise ValueError('Multiple input files are not supported')
                 input_file = arg
@@ -234,7 +240,7 @@ def parse_coord(s):
     ss = to_str(s).replace(',', '.')
     try:
         f = float(ss)
-    except:
+    except ValueError:
         dms_re = re.compile(r'^([+-])?'
                             r'(?:(\d{0,3}(?:\.\d*)?)?d)?'
                             r"(?:(\d{0,2}(?:\.\d*)?)?')?"
@@ -274,8 +280,8 @@ def read_points_from_iterable(fp):
         number_count = len(tokens)
         for i, t in enumerate(tokens):
             try:
-                d = parse_coord(t)
-            except:
+                parse_coord(t)
+            except (TypeError, ValueError,):
                 number_count = i
                 break
         number_count = min((number_count, 6))
@@ -289,15 +295,15 @@ def read_points_from_iterable(fp):
                 tuple(map(parse_coord, tokens[0:2])),
                 tuple(map(parse_coord, tokens[2:4])),
                 tokens[4] if len(tokens) > 4 else '',
-                ))
+            ))
         elif number_count == 6:
             points.append((
                 tuple(map(parse_coord, tokens[0:3])),
                 tuple(map(parse_coord, tokens[3:6])),
                 tokens[6] if len(tokens) > 6 else '',
-                ))
+            ))
     return points
-    
+
 
 def read_points(textfile, encoding='utf-8'):
     """Reads points from a file"""
@@ -329,7 +335,9 @@ def format_extra_params(modifiers):
     """Returns extra parameters as a text string"""
     items = list(modifiers.items())
     items.sort()
-    return 'Extra transform: ' + ', '.join('{0}: {1}'.format(*i) for i in items)
+    return 'Extra transform: ' + ', '.join(
+        '{0}: {1}'.format(*i) for i in items
+    )
 
 
 def to_wkt(projstring, esri=False, pretty=False):
