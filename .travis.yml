@@ -19,7 +19,7 @@ before_install:
 - pip install wheel
 - export GDALVERSION=`gdalinfo --version | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'`
 install:
-- pip install unittest2 wheel numpy scipy gdal==$GDALVERSION
+- pip install unittest2 wheel numpy scipy gdal~=$GDALVERSION
 - python setup.py install
 script:
 - python test/test_cli.py
