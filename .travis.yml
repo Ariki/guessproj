@@ -14,13 +14,12 @@ python:
 - '3.3'
 - '2.7'
 - '2.6'
-virtualenv:
-  system_site_packages: true
 before_install:
 - pip install -U pip
 - pip install wheel
+- export GDALVERSION=`gdalinfo --version | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'`
 install:
-- pip install unittest2 wheel numpy scipy
+- pip install unittest2 wheel numpy scipy gdal==$GDALVERSION
 - python setup.py install
 script:
 - python test/test_cli.py
