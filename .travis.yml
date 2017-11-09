@@ -5,17 +5,22 @@ addons:
     packages:
     - gdal-bin
     - libgdal-dev
+    - python-gdal
+    - proj-bin
     - libproj-dev
+    - python-pyproj
 python:
 - '3.6'
 - '3.3'
 - '2.7'
 - '2.6'
+virtualenv:
+  system_site_packages: true
 before_install:
 - pip install -U pip
 - pip install wheel
 install:
-- pip install unittest2 wheel numpy scipy gdal
+- pip install unittest2 wheel numpy scipy
 - python setup.py install
 script:
 - python test/test_cli.py
