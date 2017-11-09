@@ -3,9 +3,13 @@ sudo: false
 addons:
   apt:
     packages:
+    - blas
+    - libblas-dev
     - gdal-bin
     - libgdal-dev
     - python-gdal
+    - lapack
+    - liblapack-dev
     - proj-bin
     - libproj-dev
     - python-pyproj
